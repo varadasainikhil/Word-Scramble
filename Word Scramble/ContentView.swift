@@ -12,10 +12,10 @@ struct ContentView :View {
     @State private var usedWords = [String]()
     @State private var rootWord = ""
     @State private var newWord = ""
-    @State private var errorTitle = ""
-    @State private var errorMessage = ""
-    @State private var showingError = false
-    
+    @State private var alertTitle = ""
+    @State private var alertMessage = ""
+    @State private var showingAlert = false
+    @State private var score = 0
     
     var body: some View {
         NavigationStack(){
@@ -31,22 +31,24 @@ struct ContentView :View {
                             Image(systemName: "\(word.count).circle")
                             Text(word)
                         }
-                        
                     }
                 }
             }
-            .navigationTitle(rootWord)
-            .toolbar{
-                Button("Next Word", action: chooseRandomWord)
-            }
             .onSubmit(addNewWord)
-            .onAppear(perform:
-                startGame)
-            .alert(errorTitle, isPresented: $showingError){
+            .alert(alertTitle, isPresented: $showingAlert){
                 Button("OK"){}
             }message: {
-                Text(errorMessage)
+                Text(alertMessage)
             }
+            
+            Text("Score : \(score)")
+            .navigationTitle(rootWord)
+            .toolbar{
+                Button("End Game", action: endGame)
+                Button("Next Word", action: chooseRandomWord)
+            }
+            .onAppear(perform:
+                startGame)
         }
     }
     
@@ -66,6 +68,9 @@ struct ContentView :View {
         rootWord = wordsArray.randomElement() ?? "silkworm"
         let index = wordsArray.firstIndex(of: rootWord) ?? 0
         wordsArray.remove(at: index)
+        withAnimation{
+            usedWords.removeAll()
+        }
     }
     
     
@@ -93,6 +98,7 @@ struct ContentView :View {
             usedWords.insert(answer, at: 0)
         }
         newWord = ""
+        score += answer.count
     }
     
     func isOriginal(word : String) -> Bool{
@@ -121,9 +127,21 @@ struct ContentView :View {
     }
     
     func wordError(title : String, message : String){
-        errorTitle = title
-        errorMessage = message
-        showingError = true
+        alertTitle = title
+        alertMessage = message
+        showingAlert = true
+    }
+    
+    func endGame(){
+        alertTitle = "Game Ended."
+        alertMessage = "Your score is \(score)"
+        showingAlert = true
+        
+        score = 0
+        
+        withAnimation{
+            usedWords.removeAll()
+        }
     }
 }
 #Preview {
